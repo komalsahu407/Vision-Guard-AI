@@ -1,4 +1,4 @@
-# VisionGuard AI (Step 2 + 3)
+# VisionGuard AI 
 
 Run:
     python run_pipeline.py data\videos\demo.mp4 --force     (optional, the app can do this itself)

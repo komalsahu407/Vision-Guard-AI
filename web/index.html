@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VisionGuard AI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect width=%2724%27 height=%2724%27 rx=%276%27 fill=%27%233b82f6%27/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#060a14; --bg2:#0a101e; --panel:#0d1424; --panel2:#111a2e; --line:rgba(148,163,200,.12); --line2:rgba(148,163,200,.22);
+  --text:#e8edf8; --muted:#8b97b1; --dim:#5d6a86;
+  --blue:#3b82f6; --cyan:#22d3ee; --violet:#8b5cf6; --amber:#f5a524; --orange:#fb7c3c; --red:#f0455a; --green:#34d399;
+  --radius:14px; --font:"Segoe UI","Inter",system-ui,-apple-system,Roboto,sans-serif; --mono:ui-monospace,"Cascadia Code",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:radial-gradient(1200px 600px at 78% -10%,rgba(59,130,246,.10),transparent 60%),radial-gradient(900px 500px at 0% 100%,rgba(139,92,246,.08),transparent 60%),var(--bg);
+  color:var(--text);font:14px/1.5 var(--font);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* sidebar */
+aside{width:228px;flex:none;border-right:1px solid var(--line);background:linear-gradient(180deg,rgba(13,20,36,.9),rgba(8,12,22,.9));padding:20px 14px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:11px;padding:2px 8px}
+.logo{width:34px;height:34px;border-radius:10px;background:conic-gradient(from 210deg,var(--blue),var(--violet),var(--cyan),var(--blue));display:grid;place-items:center;box-shadow:0 0 24px rgba(59,130,246,.35)}
+.logo svg{width:18px;height:18px}
+.brand b{font-size:15px;letter-spacing:.2px;display:block;line-height:1.2}
+.brand span{font-size:11px;color:var(--muted)}
+nav{display:flex;flex-direction:column;gap:4px}
+nav button{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:none;border:1px solid transparent;color:var(--muted);text-align:left;transition:.15s}
+nav button svg{width:18px;height:18px;flex:none}
+nav button:hover{color:var(--text);background:rgba(148,163,200,.06)}
+nav button.on{color:var(--text);background:linear-gradient(90deg,rgba(59,130,246,.18),rgba(139,92,246,.08));border-color:rgba(59,130,246,.35)}
+.side-foot{margin-top:auto;font-size:12px;color:var(--muted);padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(148,163,200,.03)}
+.side-foot b{color:var(--text);font-weight:600;display:block;margin-bottom:2px}
+
+/* main */
+main{flex:1;min-width:0;padding:20px 26px 40px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
+header h1{font-size:20px;font-weight:650;letter-spacing:.1px}
+header h1 small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
+.grow{flex:1}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;border:1px solid var(--line2);background:rgba(148,163,200,.05);font-size:12px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.dot.ok{background:var(--green);box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:pulse 2.2s infinite}
+.dot.busy{background:var(--cyan);animation:pulse 1s infinite;box-shadow:0 0 0 0 rgba(34,211,238,.6)}
+.dot.err{background:var(--red)}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+select{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:8px 12px;min-width:170px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);transition:.15s;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:rgba(34,211,238,.5);background:#14203a}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:linear-gradient(135deg,#2f6df0,#7c4ff0);border-color:transparent;font-weight:600;box-shadow:0 6px 20px rgba(59,130,246,.28)}
+.btn.primary:hover:not(:disabled){filter:brightness(1.1);background:linear-gradient(135deg,#2f6df0,#7c4ff0)}
+.btn.small{padding:5px 10px;font-size:12px}
+.btn svg{width:15px;height:15px}
+.progress{height:3px;border-radius:3px;background:rgba(148,163,200,.12);overflow:hidden;display:none}
+.progress.on{display:block}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .3s}
+.progress-msg{font-size:12px;color:var(--cyan);margin-top:-12px;display:none}
+.progress-msg.on{display:block}
+
+.card{background:linear-gradient(180deg,rgba(17,26,46,.78),rgba(13,20,36,.78));border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.card h2{font-size:12px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .tag{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500;font-size:11px;color:var(--dim)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+/* stage */
+.stage-wrap{display:flex;justify-content:center;background:#04070e;border-radius:12px;border:1px solid var(--line);padding:0;overflow:hidden}
+.stage{position:relative;background:#000;margin:0 auto}
+.stage video,.stage canvas,.stage img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage canvas{pointer-events:none}
+.stage.draw canvas{pointer-events:auto;cursor:crosshair}
+.stage-msg{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:24px;background:rgba(4,7,14,.82);color:var(--muted);z-index:3}
+.stage-msg.on{display:grid}
+.stage-msg b{color:var(--text);display:block;font-size:15px;margin-bottom:6px}
+.controls{display:flex;align-items:center;gap:12px;margin-top:12px}
+.controls input[type=range]{flex:1;accent-color:var(--cyan)}
+.time{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:96px;text-align:right}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.rules label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+.rules input{width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:7px 10px}
+.hint{font-size:12px;color:var(--muted)}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{padding:14px 16px}
+.kpi .v{font-size:26px;font-weight:650;letter-spacing:-.3px;line-height:1.15}
+.kpi .l{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi .s{font-size:11px;color:var(--dim);margin-top:6px}
+.kpi.hot .v{background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* incidents */
+.inc-list{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;padding-right:2px}
+.inc{display:grid;grid-template-columns:46px 1fr;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(148,163,200,.03);cursor:pointer;text-align:left;width:100%;transition:.15s}
+.inc:hover{border-color:var(--line2);background:rgba(148,163,200,.06)}
+.inc.on{border-color:rgba(34,211,238,.6);background:rgba(34,211,238,.06)}
+.sev{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:16px;border:1px solid;font-variant-numeric:tabular-nums}
+.sev.low{color:var(--amber);border-color:rgba(245,165,36,.45);background:rgba(245,165,36,.10)}
+.sev.medium{color:var(--orange);border-color:rgba(251,124,60,.5);background:rgba(251,124,60,.12)}
+.sev.high{color:var(--red);border-color:rgba(240,69,90,.6);background:rgba(240,69,90,.14)}
+.inc b{font-size:13.5px;font-weight:600;display:block}
+.inc .m{font-size:12px;color:var(--muted);margin-top:2px}
+.empty{padding:26px 14px;text-align:center;color:var(--muted);border:1px dashed var(--line2);border-radius:12px;font-size:13px}
+.empty b{display:block;color:var(--text);margin-bottom:4px}
+
+/* evidence */
+.ev-img{width:100%;border-radius:10px;border:1px solid var(--line);display:block;background:#04070e;max-height:300px;object-fit:contain}
+.ev-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 4px;font-size:12px;color:var(--muted)}
+.ev-top label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.summary{font-size:13px;margin:12px 0;padding:10px 12px;border-left:3px solid var(--violet);background:rgba(139,92,246,.07);border-radius:0 8px 8px 0}
+.factor{margin:9px 0}
+.factor .top{display:flex;justify-content:space-between;font-size:12.5px}
+.factor .top span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
+.bar{height:7px;border-radius:5px;background:rgba(148,163,200,.12);margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--violet));transition:width .5s}
+.factor .d{font-size:11px;color:var(--dim);margin-top:3px}
+.total{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-weight:600}
+
+/* timeline */
+.tl svg{width:100%;height:auto;display:block;cursor:pointer}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* eval */
+.cmp{display:grid;gap:14px}
+.cmp .row{display:grid;grid-template-columns:150px 1fr 70px;gap:12px;align-items:center;font-size:13px}
+.cmp .row .bar{height:16px;border-radius:8px;margin:0}
+.cmp .row .bar i.base{background:linear-gradient(90deg,#5b657d,#8b97b1)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+td.n{font-variant-numeric:tabular-nums}
+pre{background:#050810;border:1px solid var(--line);border-radius:10px;padding:12px;font:12px/1.55 var(--mono);color:#b8c4e0;overflow:auto}
+ul.plain{padding-left:18px;display:grid;gap:6px;color:#c4cde4}
+.view{display:none;flex-direction:column;gap:18px}
+.view.on{display:flex}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--muted);margin-right:6px}
+.badge.real{color:var(--green);border-color:rgba(52,211,153,.4)}
+.badge.rule{color:var(--cyan);border-color:rgba(34,211,238,.4)}
+.badge.ml{color:var(--violet);border-color:rgba(139,92,246,.5)}
+.badge.ui{color:var(--amber);border-color:rgba(245,165,36,.4)}
+.toast{position:fixed;right:20px;bottom:20px;max-width:380px;padding:12px 16px;border-radius:12px;background:#1a0f16;border:1px solid rgba(240,69,90,.55);color:#ffd5da;z-index:20;display:none;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.toast.ok{background:#0b1a17;border-color:rgba(52,211,153,.5);color:#c9f5e6}
+.toast.on{display:block}
+.skeleton{background:linear-gradient(90deg,rgba(148,163,200,.06),rgba(148,163,200,.14),rgba(148,163,200,.06));background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;height:14px}
+@keyframes sh{to{background-position:-200% 0}}
+.fatigue{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px}
+.fv{font-size:28px;font-weight:700;letter-spacing:-.4px;line-height:1.1;font-variant-numeric:tabular-nums}
+.fv.hot{background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.fl{font-size:11.5px;color:var(--muted);margin:2px 0 6px}
+.fatigue .bar{height:6px}.fatigue .bar i.base{background:linear-gradient(90deg,#5b657d,#8b97b1)}
+.feed{display:flex;flex-direction:column;gap:6px;max-height:210px;overflow:auto}
+.fe{display:flex;gap:9px;align-items:baseline;font-size:12.5px;padding:6px 9px;border-radius:8px;background:rgba(148,163,200,.04);border:1px solid transparent;animation:fin .35s}
+.fe time{font-family:var(--mono);font-size:11px;color:var(--dim);flex:none;min-width:40px}
+.fe.scene{color:var(--muted)}.fe.zone{color:#c4b5fd}
+.fe.inc{cursor:pointer;color:var(--text);font-weight:600;background:rgba(240,69,90,.10);border-color:rgba(240,69,90,.4)}
+.fe.inc.medium{background:rgba(251,124,60,.10);border-color:rgba(251,124,60,.4)}.fe.inc.low{background:rgba(245,165,36,.09);border-color:rgba(245,165,36,.4)}
+@keyframes fin{from{opacity:0;transform:translateY(-4px)}}
+.btn[aria-pressed=true]{border-color:rgba(251,124,60,.7);background:rgba(251,124,60,.14)}
+
+.meter{height:8px;border-radius:6px;background:rgba(148,163,200,.12);overflow:hidden;margin:6px 0 2px}
+.meter i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .6s}
+.meter i.warn{background:linear-gradient(90deg,var(--amber),var(--orange))}.meter i.hot{background:linear-gradient(90deg,var(--orange),var(--red))}
+.sysrow{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sysrow .l{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}.sysrow .l b{color:var(--text);font-variant-numeric:tabular-nums}
+.spark{width:100%;height:46px;display:block;margin-top:10px}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px}
+.mini div{border:1px solid var(--line);border-radius:10px;padding:9px 11px}.mini b{display:block;font-size:17px;font-variant-numeric:tabular-nums}.mini span{font-size:11.5px;color:var(--muted)}
+.heatbox{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#04070e}.heatbox img,.heatbox canvas{display:block;width:100%}.heatbox canvas{position:absolute;inset:0;height:100%}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.chip{padding:4px 11px;border-radius:999px;border:1px solid var(--line2);background:none;font-size:12px;color:var(--muted)}.chip.on{color:var(--text);border-color:rgba(34,211,238,.6);background:rgba(34,211,238,.10)}
+.wgrid{display:grid;grid-template-columns:1fr 90px;gap:10px 14px;align-items:center}.wgrid input,.fld input,.fld select{width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:7px 10px}
+.fld{margin-bottom:12px}.fld label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}.fld label b{color:var(--text)}.fld input[type=range]{padding:0;accent-color:var(--cyan)}
+.zprev{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#04070e}.zprev img{display:block;width:100%}.zprev svg{position:absolute;inset:0;width:100%;height:100%}
+td .btn{margin-right:4px}.st-ack{color:var(--green)}.st-dis{color:var(--dim);text-decoration:line-through}
+.soon{display:grid;gap:8px;color:#c4cde4}.soon li{list-style:none;padding:9px 12px;border:1px dashed var(--line2);border-radius:10px;font-size:13px}
+td .badge{margin:0}
+@media (max-width:1100px){.layout{grid-template-columns:1fr}.two{grid-template-columns:1fr}}
+@media (max-width:820px){
+  body{flex-direction:column}
+  aside{width:100%;height:auto;position:static;flex-direction:row;align-items:center;padding:10px 12px;gap:10px;border-right:0;border-bottom:1px solid var(--line)}
+  nav{flex-direction:row;margin-left:auto}nav button span{display:none}.side-foot{display:none}.brand span{display:none}
+  main{padding:14px 14px 40px}.cmp .row{grid-template-columns:96px 1fr 56px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6l8-3z"/><circle cx="12" cy="11" r="2.4"/></svg></div>
+    <div><b>VisionGuard</b><span>Alert triage engine</span></div>
+  </div>
+  <nav>
+    <button data-v="dash" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg><span>Dashboard</span></button>
+    <button data-v="center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span>Live Monitoring</span></button>
+    <button data-v="inc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg><span>Incidents</span></button>
+    <button data-v="eval"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Analytics</span></button>
+    <button data-v="cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 012-2h2l1.5-2h7L17 6h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg><span>Cameras</span></button>
+    <button data-v="zones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Zones</span></button>
+    <button data-v="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1112 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 004 0"/></svg><span>Alerts</span></button>
+    <button data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span>Settings</span></button>
+    <button data-v="method"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg><span>How it works</span></button>
+  </nav>
+  <div class="side-foot"><b id="sideDet">Detector: not loaded</b><span id="sideSub">Runs fully on this laptop. No cloud, no paid API.</span><span style="display:block;margin-top:6px;color:var(--dim)">Build 14</span></div>
+</aside>
+
+<main>
+  <header>
+    <h1><span id="h1t">Dashboard</span><small id="subtitle"></small></h1>
+    <div class="grow"></div>
+    <span class="pill"><span class="dot" id="dot"></span><span id="pillText">Idle</span></span>
+    <select id="videoSel" aria-label="Video"></select>
+    <button class="btn" id="expBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9zM14 3v6h6M8 13h8M8 17h5"/></svg>Export report</button>
+    <button class="btn" id="upBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload video</button><input type="file" id="upFile" accept="video/*,.mp4,.mov,.mkv,.avi,.webm" hidden>
+    <button class="btn" id="zoneBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7l8-4 8 5-3 11-10 2z"/></svg>Draw zone</button>
+    <button class="btn primary" id="runBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Analyze</button>
+  </header>
+  <div class="progress" id="prog"><i id="progBar"></i></div>
+  <div class="progress-msg" id="progMsg"></div>
+
+  <!-- DASHBOARD -->
+  <section class="view on" id="v-dash">
+    <div class="kpis" id="dashKpis"></div>
+    <div class="two">
+      <div class="card">
+        <h2>Alert fatigue <span class="tag">computed from the selected video</span></h2>
+        <div id="dashFat"></div>
+      </div>
+      <div class="card">
+        <h2>System usage <span class="tag" id="sysTag">this laptop, live</span></h2>
+        <div id="sysBody"><div class="skeleton" style="height:60px"></div></div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card"><h2>Top incidents <span class="tag" id="dashIncTag"></span></h2><div class="inc-list" id="dashInc"></div></div>
+      <div class="card"><h2>Sources <span class="tag">video files in data/videos</span></h2><div id="dashCams"></div></div>
+    </div>
+  </section>
+
+  <!-- LIVE MONITORING -->
+  <section class="view" id="v-center">
+    <div class="layout">
+      <div class="col">
+        <div class="card">
+          <h2>Video workspace <span class="tag" id="stageTag">detections drawn live from real processing</span></h2>
+          <div class="stage-wrap" id="stageWrap">
+            <div class="stage" id="stage">
+              <video id="vid" playsinline preload="auto" muted></video>
+              <canvas id="cv"></canvas>
+              <div class="stage-msg" id="stageMsg"><div><b id="stageMsgT">No video found</b><span id="stageMsgS">Put an .mp4 file in the data/videos folder and refresh this page.</span></div></div>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn small" id="playBtn" aria-label="Play">Play</button>
+            <button class="btn small" id="heatBtn" aria-pressed="false" title="Where people spent time">Heatmap</button>
+            <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Seek">
+            <span class="time" id="timeTxt">0.0 / 0.0 s</span>
+          </div>
+          <div id="drawBar" class="controls" style="display:none">
+            <span class="hint" id="drawHint">Click on the video to place zone corners (at least 3).</span><span class="grow"></span>
+            <button class="btn small" id="drawUndo">Undo point</button>
+            <button class="btn small" id="drawClear">Clear zone</button>
+            <button class="btn small primary" id="drawDone">Save zone</button>
+          </div>
+          <div class="rules">
+            <div><label for="pLoiter">Loiter limit (s in zone)</label><input id="pLoiter" type="number" min="1" step="1" value="8"></div>
+            <div><label for="pAband">Unattended object (s)</label><input id="pAband" type="number" min="1" step="1" value="8"></div>
+            <div><label for="pRun">Rapid movement (body-heights/s)</label><input id="pRun" type="number" min="0.5" step="0.1" value="1.8"></div>
+            <div><label for="pTrk">Ignore tracks shorter than (s)</label><input id="pTrk" type="number" min="0" step="0.5" value="1"></div>
+            <div><label for="pMin">Hide incidents below severity</label><input id="pMin" type="number" min="0" step="1" value="0"></div>
+          </div>
+          <div class="hint" style="margin-top:8px">Change a rule, then press <b>Analyze</b> again. Re-scoring is instant because detection is cached.</div>
+        </div>
+        <div class="card tl">
+          <h2>Timeline <span class="tag">click to jump</span></h2>
+          <div id="timeline"></div>
+          <div class="legend"><span><i style="background:#38bdf8"></i>person track</span><span><i style="background:#f5a524"></i>bag / object track</span><span><i style="background:var(--red)"></i>incident</span><span><i style="background:#fff"></i>playhead</span></div>
+        </div>
+        <div class="kpis" id="kpis"></div>
+      </div>
+
+      <div class="col">
+        <div class="card" id="liveCard">
+          <h2>Live replay <span class="tag">updates as the video plays</span></h2>
+          <div class="fatigue">
+            <div><div class="fv" id="cNaive">0</div><div class="fl">Naive rule alerts</div><div class="bar"><i class="base" id="bNaive" style="width:0"></i></div></div>
+            <div><div class="fv hot" id="cInc">0</div><div class="fl">VisionGuard incidents</div><div class="bar"><i id="bInc" style="width:0"></i></div></div>
+          </div>
+          <div class="feed" id="feed"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INCIDENTS -->
+  <section class="view" id="v-inc">
+    <div class="layout">
+      <div class="col">
+        <div class="card">
+          <h2>Incident queue <span class="tag" id="queueTag"></span></h2>
+          <div class="inc-list" id="incList"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" id="evCard">
+          <h2>Evidence &amp; explanation</h2>
+          <div id="evBody"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section class="view" id="v-eval">
+    <div class="two">
+      <div class="card"><h2>Incidents by type &amp; level <span class="tag">from this video</span></h2><div id="anaTypes"></div></div>
+      <div class="card"><h2>Where people spent time <span class="tag">heatmap from real tracks</span></h2><div id="anaHeat"></div></div>
+    </div>
+    <div class="card">
+      <h2>Baseline vs VisionGuard <span class="tag">computed on the selected video</span></h2>
+      <div id="evalBody"></div>
+    </div>
+    <div class="two">
+      <div class="card" id="gtCard"></div>
+      <div class="card">
+        <h2>Fairness notes</h2>
+        <ul class="plain">
+          <li><b>Baseline:</b> a typical rule that raises an alert on every processed frame in which a person stands inside the restricted zone.</li>
+          <li>Both systems read the same detections, so the comparison isolates the triage logic, not the detector.</li>
+          <li>The numbers come from one short clip we recorded. They demonstrate the effect; they are not a general accuracy claim.</li>
+          <li>False positives are possible, for example when the detector splits one person into two tracks.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAMERAS -->
+  <section class="view" id="v-cam">
+    <div class="card">
+      <h2>Sources <span class="tag" id="camTag"></span></h2>
+      <div id="camBody"></div>
+      <div class="hint" style="margin-top:12px">These are recorded video files analysed on this laptop. Live camera (RTSP) streams are not connected in this build.</div>
+    </div>
+  </section>
+
+  <!-- ZONES / ALERTS / SETTINGS (next batches) -->
+  <section class="view" id="v-zones">
+    <div class="two">
+      <div class="card"><h2>Restricted zone <span class="tag">one zone per video in this build</span></h2><div id="zoneBody"></div></div>
+      <div class="card"><h2>Visits to the zone <span class="tag">from real tracks</span></h2><div id="zoneVisits"></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-alerts">
+    <div class="two">
+      <div class="card"><h2>Alert log <span class="tag" id="alTag"></span></h2>
+        <div class="chips" id="alSev"></div><div class="chips" id="alSt"></div><div id="alList"></div></div>
+      <div class="card"><h2>Scoring weights <span class="tag">points per factor</span></h2>
+        <div class="wgrid">
+          <label for="wZone">Entered restricted zone</label><input id="wZone" type="number" min="0" max="100" step="5" value="20">
+          <label for="wDwell">Time spent in zone</label><input id="wDwell" type="number" min="0" max="100" step="5" value="40">
+          <label for="wAband">Unattended object</label><input id="wAband" type="number" min="0" max="100" step="5" value="60">
+          <label for="wRun">Rapid movement</label><input id="wRun" type="number" min="0" max="100" step="5" value="30">
+          <label for="wAnom">Unusual vs this scene (ML)</label><input id="wAnom" type="number" min="0" max="100" step="5" value="20">
+        </div>
+        <div class="hint" style="margin:12px 0">Severity = sum of factor points, capped at 100. Low &lt; 45, Medium 45–69, High 70+. Change a weight and press the button: scores are recomputed from the cached detections, no re-detection needed.</div>
+        <button class="btn primary" id="wApply">Apply weights &amp; re-score</button> <button class="btn" id="wReset">Reset</button>
+      </div>
+    </div>
+    <div class="card"><h2>Notifications <span class="tag">email</span></h2>
+      <div class="two">
+        <div>
+          <label class="hint" style="display:flex;gap:8px;cursor:pointer;margin-bottom:10px"><input type="checkbox" id="nEmailOn"><b style="color:var(--text)">Email alerts</b> (with blurred evidence photo)</label>
+          <div class="fld"><label for="nUser">Your Gmail address</label><input id="nUser" type="email" placeholder="you@gmail.com" autocomplete="off"></div>
+          <div class="fld"><label for="nPass">Gmail app password <b id="nPassNote"></b></label><input id="nPass" type="password" placeholder="16-letter app password" autocomplete="new-password"></div>
+          <div class="fld"><label for="nTo">Send alerts to</label><input id="nTo" type="email" placeholder="same or another email" autocomplete="off"></div>
+          <button class="btn small" id="nTestE">Send test email</button>
+        </div>
+        <div style="display:none" hidden>
+          <label class="hint" style="display:flex;gap:8px;cursor:pointer;margin-bottom:10px"><input type="checkbox" id="nWaOn"><b style="color:var(--text)">WhatsApp alerts</b> (text only, via CallMeBot)</label>
+          <div class="fld"><label for="nPhone">Your WhatsApp number with country code</label><input id="nPhone" placeholder="91XXXXXXXXXX" autocomplete="off"></div>
+          <div class="fld"><label for="nKey">CallMeBot API key <b id="nKeyNote"></b></label><input id="nKey" type="password" placeholder="key you receive on WhatsApp" autocomplete="new-password"></div>
+          <button class="btn small" id="nTestW">Send test WhatsApp</button>
+        </div>
+      </div>
+      <div class="two" style="margin-top:14px">
+        <div class="fld"><label for="nLevel">Send only alerts at or above</label><select id="nLevel"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low (everything)</option></select></div>
+        <div>
+          <label class="hint" style="display:flex;gap:8px;cursor:pointer;align-items:center;margin-bottom:8px"><input type="checkbox" id="nAuto"><span>Send automatically when an Analyze finishes</span></label>
+          <label class="hint" style="display:flex;gap:8px;cursor:pointer;align-items:center"><input type="checkbox" id="nEntries"><span>Also send a short notice for everyone who enters the zone and leaves (once per person)</span></label>
+        </div>
+      </div>
+      <button class="btn primary" id="nSave">Save notification settings</button> <button class="btn" id="nSend">Send alerts for this video now</button>
+      <div class="hint" style="margin-top:10px" id="nMsg">Passwords and keys stay in a file on this laptop and are never shown again after saving.</div>
+    </div>
+  </section>
+
+  <section class="view" id="v-settings">
+    <div class="two">
+      <div class="card"><h2>Detection <span class="tag">changing these re-runs detection</span></h2>
+        <div class="fld"><label for="sConf">Person confidence <b id="sConfV"></b></label><input id="sConf" type="range" min="0.15" max="0.8" step="0.05"></div>
+        <div class="fld"><label for="sBag">Bag confidence <b id="sBagV"></b></label><input id="sBag" type="range" min="0.05" max="0.6" step="0.05"></div>
+        <div class="fld"><label for="sStride">Process every Nth frame</label><select id="sStride"><option value="1">1 (most accurate, slowest)</option><option value="2">2 (default)</option><option value="3">3</option><option value="4">4 (fastest)</option></select></div>
+        <button class="btn primary" id="sSave">Save settings</button> <button class="btn" id="sReset">Defaults</button>
+        <div class="hint" style="margin-top:10px" id="sInfo"></div>
+      </div>
+      <div class="card"><h2>Privacy</h2>
+        <label class="hint" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="sRaw" style="margin-top:3px"><span><b style="color:var(--text)">Allow unblurred evidence ("Authorized review")</b><br>Evidence frames always blur people by default. Turn this off to remove the option to unblur completely.</span></label>
+        <h2 style="margin-top:22px">Detector</h2><div id="sDet" class="hint"></div>
+      </div>
+    </div>
+    <div class="card"><h2>Storage <span class="tag">cached results per video</span></h2><div id="stoBody"></div></div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="view" id="v-method">
+    <div class="two">
+      <div class="card">
+        <h2>What is real, and what is not</h2>
+        <ul class="plain">
+          <li><span class="badge ml">AI model</span>YOLOv8n pretrained, runs on CPU through ONNX Runtime. Finds people and bags in every sampled frame.</li>
+          <li><span class="badge rule">Tracking</span>Our own IoU tracker links detections into tracks with IDs.</li>
+          <li><span class="badge rule">Rules</span>Zone entry, loitering time, unattended object, rapid movement. Plain, deterministic logic, not deep learning.</li>
+          <li><span class="badge ml">ML</span>Isolation Forest on this video's track features. It only switches on when there are enough tracks, otherwise the dashboard says it is inactive.</li>
+          <li><span class="badge real">Severity</span>Sum of named factor points. The explanation bars are the actual calculation.</li>
+          <li><span class="badge ui">UI only</span>Layout, colours and animations. Every number you see comes from processing.</li>
+          <li><span class="badge real">Privacy</span>Evidence frames blur people by default. Unblurring is a deliberate "authorized review" action.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Honest limitations</h2>
+        <ul class="plain">
+          <li>The system does not understand intent. It flags patterns (too long in a zone, object left alone, fast movement).</li>
+          <li>Small bags are hard for a tiny model at 320 px input, so object detection can miss them.</li>
+          <li>Anomaly scoring needs several tracks to be meaningful. On very short clips it stays off.</li>
+          <li>Thresholds are tuned by hand for the scene and are editable above the video.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url, opt) {
+  const r = await fetch(url, opt); let j = null;
+  try { j = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error((j && j.error) || r.statusText);
+  return j;
+}
+const S = { cfg: { allow_raw: true }, ack: {}, alSev: 'all', alSt: 'open', view: 'dash', sys: [], videos: [], v: null, tracks: null, result: null, zone: [], draw: null, sel: null, raw: false, busy: false, pollT: null, vidOK: true };
+const LEVEL_COL = { low: '#f5a524', medium: '#fb7c3c', high: '#f0455a' };
+
+function toast(msg, ok) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast on' + (ok ? ' ok' : '');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', 5200);
+}
+function setStatus(kind, text) {
+  $('#dot').className = 'dot ' + kind; $('#pillText').textContent = text;
+}
+
+/* ---------- navigation ---------- */
+const TITLES = {
+  dash: ['Dashboard', 'Raw detections in, a short ranked list of explainable incidents out'],
+  center: ['Live Monitoring', 'Replay the video with detections, zone and live alert counters'],
+  inc: ['Incidents', 'Ranked queue with evidence frames and the exact score breakdown'],
+  eval: ['Analytics', 'Baseline comparison, incident mix and where people spent time'],
+  cam: ['Cameras', 'Video sources available on this laptop'],
+  zones: ['Zones', 'Restricted areas used by the rules'],
+  alerts: ['Alerts', 'Rules, thresholds and alert scoring'],
+  settings: ['Settings', 'Detector, privacy and storage'],
+  method: ['How it works', 'What is real, what is rule-based, and the limits'],
+};
+function goView(k) {
+  S.view = k;
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x.dataset.v === k));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + k));
+  $('#h1t').textContent = TITLES[k][0]; $('#subtitle').textContent = TITLES[k][1];
+  if (k === 'center') sizeStage();
+  if (k === 'dash') pollSystem(true);
+  if (k === 'inc' && S.result && S.result.incidents.length && S.sel === null) selectIncident(S.result.incidents[0].id, true);
+  if (k === 'eval') renderAnalytics();
+  if (k === 'alerts') loadNotify();
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => goView(b.dataset.v));
+
+/* ---------- loading ---------- */
+async function loadVideos(keep) {
+  let data;
+  try { data = await api('/api/videos'); } catch (e) { toast('Cannot reach the server: ' + e.message); return; }
+  S.videos = data.videos;
+  $('#sideDet').textContent = data.detector_ready ? 'Detector: YOLOv8n (ONNX, CPU)' : 'Detector: model file missing';
+  if (!data.detector_ready) $('#sideSub').textContent = 'models/yolov8n.onnx not found. Motion fallback will be used.';
+  const sel = $('#videoSel');
+  sel.innerHTML = S.videos.map(v => `<option value="${esc(v.name)}">${esc(v.name)}${v.analyzed ? '  ✓' : ''}</option>`).join('');
+  if (!S.videos.length) {
+    sel.disabled = true; $('#runBtn').disabled = true; $('#zoneBtn').disabled = true;
+    $('#stageMsg').classList.add('on'); setStatus('', 'No video'); renderAll(); return;
+  }
+  sel.disabled = false; $('#runBtn').disabled = false; $('#zoneBtn').disabled = false;
+  const name = keep && S.v ? S.v.name : S.videos[0].name;
+  sel.value = name; await selectVideo(name);
+}
+$('#videoSel').onchange = e => selectVideo(e.target.value);
+
+async function selectVideo(name) {
+  S.v = S.videos.find(v => v.name === name); S.sel = null; S.draw = null; S.raw = false; S.vidOK = true;
+  $('#stage').classList.remove('draw'); $('#drawBar').style.display = 'none';
+  const vid = $('#vid'); vid.pause(); vid.src = '/api/video/' + encodeURIComponent(name); vid.poster = '/api/frame/' + encodeURIComponent(name);
+  $('#stageMsg').classList.remove('on'); $('#playBtn').textContent = 'Play';
+  sizeStage();
+  S.zone = []; S.tracks = null; S.result = null;
+  try { const z = await api('/api/zone/' + encodeURIComponent(name)); S.zone = z.points || []; } catch (e) {}
+  await loadResult();
+  try { S.ack = await api('/api/ack/' + encodeURIComponent(name)); } catch (e) { S.ack = {}; }
+  renderAll();
+  S.auto = S.auto || {};
+  if (S.result && (S.result.version || 0) < 3 && !S.busy && !S.auto[name]) { S.auto[name] = 1; toast('Updating this video with the new analysis…', true); runAnalyze(false); }
+}
+async function loadResult() {
+  const n = encodeURIComponent(S.v.name);
+  try { S.result = await api('/api/result/' + n); } catch (e) { S.result = null; }
+  try { S.tracks = (await api('/api/tracks/' + n)).tracks; } catch (e) { S.tracks = null; }
+  if (S.result && S.result.kept_ids && S.tracks) { const keep = new Set(S.result.kept_ids); S.tracks = S.tracks.filter(t => keep.has(t.id)); }
+  if (S.result && S.tracks) { const idm = S.result.identity || {}; S.tracks.forEach(t => t.pid = idm[t.id] ?? t.id); }
+  if (S.result && S.result.zone) S.zone = S.result.zone;
+  try { S.zoneName = (await api('/api/zone/' + n)).name || 'Restricted zone'; } catch (e) { S.zoneName = 'Restricted zone'; }
+  if (S.result) {
+    const p = S.result.params || {};
+    if (p.loiter_s) $('#pLoiter').value = p.loiter_s;
+    if (p.abandon_s) $('#pAband').value = p.abandon_s;
+    if (p.run_speed) $('#pRun').value = p.run_speed;
+    if (p.min_severity !== undefined) $('#pMin').value = p.min_severity;
+    if (p.min_track_s !== undefined) $('#pTrk').value = p.min_track_s;
+    [['#wZone', 'w_zone_entry'], ['#wDwell', 'w_dwell'], ['#wAband', 'w_abandoned'], ['#wRun', 'w_running'], ['#wAnom', 'w_anomaly']].forEach(([id, k]) => { if (p[k] !== undefined) $(id).value = p[k]; });
+  }
+}
+
+/* ---------- stage sizing & canvas ---------- */
+let _szRaf = 0;
+function sizeStage() {
+  if (_szRaf) return;
+  _szRaf = requestAnimationFrame(() => {
+    _szRaf = 0;
+    if (!S.v) return;
+    const [pw, ph] = S.v.proc_size, wrap = $('#stageWrap');
+    const maxW = Math.floor(wrap.clientWidth) || 800, maxH = Math.max(320, Math.floor(window.innerHeight * 0.62));
+    let w = maxW, h = w * ph / pw; if (h > maxH) { h = maxH; w = h * pw / ph; }
+    w = Math.floor(w); h = Math.floor(h);
+    const st = $('#stage'), cv = $('#cv'), dpr = window.devicePixelRatio || 1;
+    if (st.style.width !== w + 'px') st.style.width = w + 'px';
+    if (st.style.height !== h + 'px') st.style.height = h + 'px';
+    const cw = Math.round(w * dpr), chh = Math.round(h * dpr);
+    if (cv.width !== cw) cv.width = cw;
+    if (cv.height !== chh) cv.height = chh;
+  });
+}
+window.addEventListener('resize', sizeStage);
+
+const vid = $('#vid');
+vid.addEventListener('error', () => {
+  S.vidOK = false; $('#stageMsgT').textContent = 'This browser cannot play the video';
+  $('#stageMsgS').textContent = 'Press Analyze: a browser-playable copy is made automatically (needs: pip install imageio-ffmpeg). Detection works either way.';
+  $('#stageMsg').classList.add('on');
+});
+$('#playBtn').onclick = () => { if (vid.paused) { vid.play().catch(() => {}); } else vid.pause(); };
+vid.addEventListener('play', () => $('#playBtn').textContent = 'Pause');
+vid.addEventListener('pause', () => $('#playBtn').textContent = 'Play');
+$('#scrub').oninput = e => { if (vid.duration) vid.currentTime = e.target.value / 1000 * vid.duration; };
+
+function nearestBox(tr, f, stride) {
+  const fr = tr.frames; let lo = 0, hi = fr.length - 1;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (fr[m] < f) lo = m + 1; else hi = m; }
+  let best = lo; if (lo > 0 && Math.abs(fr[lo - 1] - f) < Math.abs(fr[lo] - f)) best = lo - 1;
+  return Math.abs(fr[best] - f) <= stride * 1.5 ? best : -1;
+}
+function draw() {
+  requestAnimationFrame(draw);
+  const cv = $('#cv'), c = cv.getContext('2d'); if (!S.v) return;
+  const [pw, ph] = S.v.proc_size, k = cv.width / pw, t = vid.currentTime || 0;
+  // lightweight UI updates (cheap)
+  updateFeed(t);
+  const d = vid.duration || S.v.duration || 0;
+  $('#timeTxt').textContent = `${t.toFixed(1)} / ${d.toFixed(1)} s`;
+  if (d && document.activeElement !== $('#scrub')) $('#scrub').value = t / d * 1000;
+  const ph_ = document.getElementById('playhead'); if (ph_ && d) { const x = t / d * 1000; ph_.setAttribute('x1', x); ph_.setAttribute('x2', x); }
+  // heavy canvas redraw only when something changed (saves CPU, keeps the video smooth)
+  const key = [t.toFixed(2), S.rev, S.draw ? S.draw.length : -1, S.showHeat, S.sel, cv.width, cv.height].join('|');
+  if (key === S.drawKey) return; S.drawKey = key;
+  c.clearRect(0, 0, cv.width, cv.height);
+  // zone
+  const zp = S.draw || S.zone;
+  if (zp && zp.length) {
+    c.save(); c.beginPath(); zp.forEach((p, i) => i ? c.lineTo(p[0] * k, p[1] * k) : c.moveTo(p[0] * k, p[1] * k));
+    if (!S.draw || zp.length > 2) c.closePath();
+    c.fillStyle = 'rgba(139,92,246,.18)'; c.fill(); c.setLineDash([8 * k / 1.5, 6 * k / 1.5]); c.lineWidth = 2 * k; c.strokeStyle = 'rgba(167,139,250,.95)'; c.stroke(); c.setLineDash([]);
+    if (S.draw) zp.forEach(p => { c.beginPath(); c.arc(p[0] * k, p[1] * k, 5 * k, 0, 7); c.fillStyle = '#22d3ee'; c.fill(); });
+    else { c.font = `600 ${11 * k}px sans-serif`; c.fillStyle = 'rgba(196,181,253,.95)'; c.fillText('RESTRICTED ZONE', zp[0][0] * k + 6 * k, zp[0][1] * k + 16 * k); }
+    c.restore();
+  }
+  if (S.showHeat && S.tracks && S.result) {
+    if (S.heat === null || S.heat === undefined) S.heat = buildHeat() || false;
+    if (S.heat) { c.save(); c.globalAlpha = .78; c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(S.heat.cv, 0, 0, cv.width, cv.height); c.restore(); }
+  }
+  if (S.tracks && S.result) {
+    const fps = S.result.meta.src_fps, stride = S.result.meta.stride, f = t * fps;
+    const flagged = {}; (S.result.incidents || []).forEach(i => (i.track_ids || [i.track_id]).forEach(id => { (flagged[id] = flagged[id] || []).push(i); }));
+    for (const tr of S.tracks) {
+      const bag = tr.label !== 'person' && tr.label !== 'motion';
+      const i = nearestBox(tr, f, bag && tr.frames.length <= 3 ? stride * 4 : stride); if (i < 0) continue;   // very short bag tracks stay visible ~0.5 s
+      const act = (flagged[tr.id] || []).find(x => t >= x.start_t - .3 && t <= x.end_t + .3);
+      const col = act ? LEVEL_COL[act.level] : bag ? '#f5a524' : '#38bdf8';
+      // trail
+      c.beginPath(); let started = false;
+      for (let j = Math.max(0, i - 24); j <= i; j++) { const p = tr.path[j]; if (!started) { c.moveTo(p[0] * k, p[1] * k); started = true; } else c.lineTo(p[0] * k, p[1] * k); }
+      c.strokeStyle = col + '99'; c.lineWidth = 2 * k; c.stroke();
+      const b = tr.boxes[i];
+      c.lineWidth = (act ? 3 : 2) * k; c.strokeStyle = col; c.strokeRect(b[0] * k, b[1] * k, (b[2] - b[0]) * k, (b[3] - b[1]) * k);
+      const label = `${tr.label} #${tr.pid ?? tr.id}${act ? ' ⚠' : ''}`; c.font = `600 ${11 * k}px sans-serif`;
+      const w = c.measureText(label).width + 10 * k, y = Math.max(0, b[1] * k - 18 * k);
+      c.fillStyle = col; c.fillRect(b[0] * k, y, w, 17 * k); c.fillStyle = '#05080f'; c.fillText(label, b[0] * k + 5 * k, y + 12.5 * k);
+    }
+  }
+}
+requestAnimationFrame(draw);
+
+/* ---------- zone drawing ---------- */
+$('#zoneBtn').onclick = () => {
+  if (S.view !== 'center') goView('center');
+  if (S.draw) return;
+  S.draw = (S.zone || []).slice(); vid.pause(); $('#stage').classList.add('draw'); $('#drawBar').style.display = 'flex';
+  if (!S.draw.length) S.draw = [];
+  $('#drawHint').textContent = 'Click on the video to place the corners of the restricted zone (at least 3 points).';
+};
+$('#cv').addEventListener('click', e => {
+  if (!S.draw) return; const r = $('#cv').getBoundingClientRect(), [pw, ph] = S.v.proc_size;
+  S.draw.push([Math.round((e.clientX - r.left) / r.width * pw), Math.round((e.clientY - r.top) / r.height * ph)]);
+});
+$('#drawUndo').onclick = () => { if (S.draw) S.draw.pop(); };
+$('#drawClear').onclick = async () => { S.draw = null; S.zone = []; endDraw(); await saveZone([]); };
+$('#drawDone').onclick = async () => {
+  if (!S.draw || S.draw.length < 3) { toast('Place at least 3 points to make a zone.'); return; }
+  S.zone = S.draw; S.draw = null; endDraw(); await saveZone(S.zone);
+};
+function endDraw() { $('#stage').classList.remove('draw'); $('#drawBar').style.display = 'none'; }
+async function saveZone(pts) {
+  try {
+    await api('/api/zone/' + encodeURIComponent(S.v.name), { method: 'POST', body: JSON.stringify({ points: pts, name: S.zoneName || 'Restricted zone' }) });
+    toast(pts.length ? 'Zone saved.' : 'Zone cleared.', true);
+    if (S.v.detected || S.result) runAnalyze(false); else renderAll();
+  } catch (e) { toast('Could not save the zone: ' + e.message); }
+}
+
+/* ---------- analyze ---------- */
+function params() {
+  return { loiter_s: +$('#pLoiter').value, abandon_s: +$('#pAband').value, run_speed: +$('#pRun').value, min_severity: +$('#pMin').value, min_track_s: +$('#pTrk').value,
+    w_zone_entry: +$('#wZone').value, w_dwell: +$('#wDwell').value, w_abandoned: +$('#wAband').value, w_running: +$('#wRun').value, w_anomaly: +$('#wAnom').value };
+}
+$('#runBtn').onclick = () => runAnalyze(false);
+async function runAnalyze(force) {
+  if (S.busy || !S.v) return;
+  S.busy = true; $('#runBtn').disabled = true; $('#zoneBtn').disabled = true; $('#expBtn').disabled = true;
+  $('#prog').classList.add('on'); $('#progMsg').classList.add('on'); $('#progBar').style.width = '2%'; $('#progMsg').textContent = 'Starting…';
+  setStatus('busy', 'Analyzing');
+  try { await api('/api/analyze', { method: 'POST', body: JSON.stringify({ video: S.v.name, force, params: params() }) }); }
+  catch (e) { if (!/already running/.test(e.message)) return finishRun('Could not start: ' + e.message); }
+  clearInterval(S.pollT);
+  let fails = 0, idle = 0;
+  S.pollT = setInterval(async () => {
+    try {
+      const s = await api('/api/status/' + encodeURIComponent(S.v.name)); fails = 0;
+      if (s.state === 'idle' && ++idle > 6) { clearInterval(S.pollT); return finishRun('Server restarted during analysis. Press Analyze again.'); }
+      $('#progBar').style.width = Math.max(2, s.progress * 100) + '%'; $('#progMsg').textContent = s.message || '';
+      if (s.state === 'done') { clearInterval(S.pollT); finishRun(null); }
+      if (s.state === 'error') { clearInterval(S.pollT); finishRun(s.error || 'Analysis failed'); }
+    } catch (e) { if (++fails >= 8) { clearInterval(S.pollT); finishRun('Lost connection to the server. Is the terminal still running python app.py?'); } }
+  }, 700);
+}
+async function finishRun(err) {
+  clearInterval(S.pollT); S.busy = false; $('#expBtn').disabled = false; $('#runBtn').disabled = false; $('#zoneBtn').disabled = false;
+  $('#prog').classList.remove('on'); $('#progMsg').classList.remove('on');
+  if (err) { setStatus('err', 'Error'); toast(err); return; }
+  const keep = S.v.name; await loadVideos(true); S.sel = (S.result && S.result.incidents[0]) ? S.result.incidents[0].id : null;
+  renderAll(); if (S.sel) selectIncident(S.sel, true);
+  toast('Analysis complete.', true);
+  try { const n = await api('/api/notify'); S.notify = n;   // show what the automatic alert sending did
+    if (n.auto && n.last && n.last.video === S.v.name && Date.now() / 1000 - n.last.time < 120) toast('Alerts: ' + sendSummary(n.last), !n.last.errors.length); } catch (e) {}
+}
+
+/* ---------- rendering ---------- */
+function fmt(v, suf) { return v === null || v === undefined ? '—' : v + (suf || ''); }
+function renderAll() { S.rev = (S.rev || 0) + 1; S.heat = null; buildFeed(); updateExport(); renderHeader(); renderKPIs(); renderIncidents(); renderEvidence(); renderTimeline(); renderEval(); renderDash(); renderCams(); renderAnalytics(); renderZones(); renderAlerts(); renderSettings(); }
+function renderHeader() {
+  if (!S.v) return;
+  if (S.busy) return;
+  if (S.result) setStatus('ok', 'Analysis ready'); else setStatus('', S.v.detected ? 'Detected, not scored' : 'Not analyzed yet');
+  $('#stageTag').textContent = S.result ? S.result.meta.detector : 'press Analyze to run detection';
+}
+function kpi(v, l, s, hot) { return `<div class="card kpi ${hot ? 'hot' : ''}"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div><div class="s">${esc(s)}</div></div>`; }
+function renderKPIs() {
+  const el = $('#kpis');
+  if (!S.result) {
+    el.innerHTML = ['Tracks', 'Incidents', 'Naive alerts', 'Alerts reduced'].map(l => `<div class="card kpi"><div class="skeleton" style="width:50%;height:26px"></div><div class="l" style="margin-top:8px">${l}</div><div class="s">waiting for analysis</div></div>`).join('');
+    return;
+  }
+  const k = S.result.kpis;
+  el.innerHTML =
+    kpi(k.persons + ' / ' + k.bags, 'People / objects tracked', (S.result.ignored_tracks ? S.result.ignored_tracks + ' short noise track(s) ignored' : 'from YOLO + tracker')) +
+    kpi(k.incidents, 'Incidents raised', 'after triage', true) +
+    kpi(fmt(k.naive_alerts), 'Naive rule alerts', S.zone.length ? 'frame-by-frame zone rule' : 'draw a zone to compare') +
+    kpi(k.reduction_pct === null ? '—' : k.reduction_pct + '%', 'Alerts reduced', k.visitors_not_flagged !== null ? k.visitors_not_flagged + ' brief zone visit(s) not flagged' : 'needs a zone', true) +
+    kpi(k.avg_infer_ms + ' ms', 'Detector latency / frame', 'measured on this laptop') +
+    kpi(k.processing_fps, 'Processing speed (fps)', 'sampled frames per second');
+}
+function renderIncidents() {
+  const el = $('#incList');
+  if (!S.result) { el.innerHTML = `<div class="empty"><b>No analysis yet</b>Choose a video, draw the restricted zone, then press <b>Analyze</b>.</div>`; $('#queueTag').textContent = ''; return; }
+  const inc = S.result.incidents; $('#queueTag').textContent = inc.length + ' incident' + (inc.length === 1 ? '' : 's');
+  if (!inc.length) { el.innerHTML = `<div class="empty"><b>No incidents</b>Nothing crossed the rules in this clip. Try lowering the loiter limit.</div>`; return; }
+  el.innerHTML = inc.map(i => `<button class="inc ${S.sel === i.id ? 'on' : ''}" data-id="${i.id}"><div class="sev ${i.level}">${Math.round(i.severity)}</div><div><b>${esc(i.type)}</b><div class="m">${esc(i.label)} #${i.track_id} · ${i.start_t.toFixed(1)}–${i.end_t.toFixed(1)} s · ${i.level}</div></div></button>`).join('');
+  el.querySelectorAll('.inc').forEach(b => b.onclick = () => selectIncident(+b.dataset.id));
+}
+function selectIncident(id, silent) {
+  S.sel = id; S.raw = false; renderIncidents(); renderEvidence(); renderTimeline();
+  const i = S.result && S.result.incidents.find(x => x.id === id);
+  if (i && !silent) { vid.pause(); vid.currentTime = i.peak_t; } else if (i) { vid.currentTime = i.peak_t; }
+}
+function renderEvidence() {
+  const el = $('#evBody'), i = S.result && S.result.incidents.find(x => x.id === S.sel);
+  if (!i) { el.innerHTML = `<div class="empty"><b>Select an incident</b>You will see the evidence frame and exactly how its score was built.</div>`; return; }
+  const img = i.evidence ? `<img class="ev-img" alt="Evidence frame" src="/api/evidence/${encodeURIComponent(S.v.name)}/inc${i.id}.jpg?raw=${S.raw ? 1 : 0}&v=${Date.now() % 100000}">` : `<div class="empty">No evidence frame could be saved.</div>`;
+  const fs = i.factors.map(f => `<div class="factor"><div class="top"><span>${esc(f.label)}</span><span>${f.points} / ${f.weight} pts</span></div><div class="bar"><i style="width:${f.weight ? Math.min(100, f.points / f.weight * 100) : 0}%"></i></div><div class="d">${esc(f.detail)}</div></div>`).join('');
+  el.innerHTML = img + `<div class="ev-top"><span>${S.raw ? 'Unblurred (authorized review)' : 'People blurred for privacy'}</span>${S.cfg.allow_raw ? `<label><input type="checkbox" id="rawChk" ${S.raw ? 'checked' : ''}> Authorized review</label>` : '<span></span>'}</div>
+    <div class="summary">${esc(i.summary)}</div>${fs}<div class="total"><span>Severity</span><span style="color:${LEVEL_COL[i.level]}">${Math.round(i.severity)} / 100 · ${i.level}</span></div><div style="margin-top:12px"><button class="btn small" id="goLive">Open in Live Monitoring</button></div>`;
+  $('#goLive').onclick = () => { goView('center'); vid.currentTime = i.peak_t; };
+  const chk = $('#rawChk'); if (chk) chk.onchange = () => {
+    if (chk.checked && !confirm('Show the unblurred frame? Only do this for authorized review.')) { chk.checked = false; return; }
+    S.raw = chk.checked; renderEvidence();
+  };
+}
+function renderTimeline() {
+  const el = $('#timeline'); if (!S.v) { el.innerHTML = ''; return; }
+  const D = (S.result && S.result.meta ? S.result.meta.total_frames / S.result.meta.src_fps : S.v.duration) || 1;
+  if (!S.result || !S.tracks) { el.innerHTML = `<div class="empty"><b>Timeline appears after analysis</b>Tracks and incidents are drawn from real results.</div>`; return; }
+  const fps = S.result.meta.src_fps, lanes = [], laneOf = {}, tracks = S.tracks.slice().sort((a, b) => a.first_frame - b.first_frame);
+  tracks.forEach(t => { const pid = t.pid ?? t.id; if (!(pid in laneOf)) { laneOf[pid] = lanes.length; lanes.push(pid); } });
+  const laneH = 9, top = 14, h1 = top + Math.min(lanes.length, 14) * laneH + 8, incH = 20, H = h1 + incH + 26;
+  let s = `<svg viewBox="0 0 1000 ${H}" role="img" aria-label="Timeline of tracks and incidents">`;
+  const step = D > 60 ? 10 : D > 20 ? 5 : 2;
+  for (let t = 0; t <= D; t += step) { const x = t / D * 1000; s += `<line x1="${x}" x2="${x}" y1="6" y2="${H - 18}" stroke="rgba(148,163,200,.10)"/><text x="${x + 3}" y="${H - 3}" fill="#6d7a97" font-size="13">${t}s</text>`; }
+  tracks.forEach(tr => {
+    const i = Math.min(laneOf[tr.pid ?? tr.id], 13), bag = tr.label !== 'person' && tr.label !== 'motion', x1 = tr.first_frame / fps / D * 1000, x2 = Math.max(x1 + 3, tr.last_frame / fps / D * 1000);
+    s += `<rect x="${x1}" y="${top + i * laneH}" width="${x2 - x1}" height="5" rx="2.5" fill="${bag ? '#f5a524' : '#38bdf8'}" opacity=".75"><title>${esc(tr.label)} #${tr.pid ?? tr.id}</title></rect>`;
+  });
+  S.result.incidents.forEach(i => {
+    const x1 = i.start_t / D * 1000, x2 = Math.max(x1 + 6, i.end_t / D * 1000), on = i.id === S.sel;
+    s += `<rect data-id="${i.id}" class="tl-inc" x="${x1}" y="${h1}" width="${x2 - x1}" height="${incH}" rx="5" fill="${LEVEL_COL[i.level]}" opacity="${on ? 1 : .8}" stroke="${on ? '#fff' : 'none'}" stroke-width="2"><title>${esc(i.type)} (${Math.round(i.severity)})</title></rect>`;
+  });
+  s += `<line id="playhead" x1="0" x2="0" y1="0" y2="${H - 14}" stroke="#fff" stroke-width="2"/></svg>`;
+  el.innerHTML = s;
+  const svg = el.querySelector('svg');
+  svg.onclick = e => {
+    const tgt = e.target.closest('.tl-inc'); if (tgt) return selectIncident(+tgt.dataset.id);
+    const r = svg.getBoundingClientRect(); vid.pause(); vid.currentTime = (e.clientX - r.left) / r.width * D;
+  };
+}
+function pct(v) { return v === null || v === undefined ? '—' : Math.round(v * 100) + '%'; }
+function renderEval() {
+  const el = $('#evalBody'), g = $('#gtCard');
+  g.innerHTML = `<h2>Ground truth (optional)</h2><p class="hint" style="margin-bottom:10px">To measure precision and recall, list what really happened in your clip. Save this as <b>${S.v ? esc(S.v.stem) : 'video'}.gt.json</b> next to the video in <b>data/videos</b>, then press Analyze.</p><pre>{ "events": [
+  { "type": "loiter",    "start": 70, "end": 95  },
+  { "type": "abandoned", "start": 110, "end": 140 },
+  { "type": "running",   "start": 130, "end": 135 }
+] }</pre>`;
+  if (!S.result) { el.innerHTML = `<div class="empty"><b>No results yet</b>Run an analysis on the Command center page first.</div>`; return; }
+  const k = S.result.kpis;
+  if (k.naive_alerts === null) { el.innerHTML = `<div class="empty"><b>Draw a restricted zone first</b>The baseline rule needs a zone to raise alerts.</div>`; return; }
+  const mx = Math.max(k.naive_alerts, k.incidents, 1);
+  let h = `<div class="cmp">
+    <div class="row"><span>Naive rule alerts</span><div class="bar"><i class="base" style="width:${k.naive_alerts / mx * 100}%"></i></div><b>${k.naive_alerts}</b></div>
+    <div class="row"><span>VisionGuard incidents</span><div class="bar"><i style="width:${Math.max(k.incidents / mx * 100, 1)}%"></i></div><b>${k.incidents}</b></div>
+    <div class="hint">${k.reduction_pct !== null ? `<b>${k.reduction_pct}% fewer alerts</b> to review. ` : ''}${k.visitors_not_flagged || 0} brief visit(s) to the zone were not escalated.</div></div>`;
+  const ev = S.result.evaluation;
+  if (ev) {
+    h += `<table style="margin-top:18px"><thead><tr><th>System</th><th>Alerts</th><th>Precision</th><th>Recall</th></tr></thead><tbody>
+      <tr><td>Naive per-frame rule</td><td class="n">${ev.baseline.alerts}</td><td class="n">${pct(ev.baseline.precision)}</td><td class="n">${pct(ev.baseline.recall)}</td></tr>
+      <tr><td><b>VisionGuard</b></td><td class="n">${ev.ours.alerts}</td><td class="n">${pct(ev.ours.precision)}</td><td class="n">${pct(ev.ours.recall)}</td></tr></tbody></table>
+      <div class="hint" style="margin-top:8px">${ev.gt_events} ground-truth events. Precision = alerts that match a real event. Recall = real events that were caught.</div>`;
+  } else h += `<div class="hint" style="margin-top:14px">Add a ground-truth file (see the card below) to also measure precision and recall.</div>`;
+  h += `<div class="hint" style="margin-top:8px">Anomaly model: ${esc(S.result.anomaly_status)}</div>`;
+  el.innerHTML = h;
+}
+
+/* ---------- helpers ---------- */
+const ENTRY_MIN_S = 1.0;   // seconds inside the zone before the feed calls it an entry
+const isPerson = tr => tr.label === 'person' || tr.label === 'motion';
+function inPoly(p, poly) {
+  let ins = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > p[1]) !== (yj > p[1]) && p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi) ins = !ins;
+  }
+  return ins;
+}
+function countLE(arr, t) { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= t) lo = m + 1; else hi = m; } return lo; }
+
+/* ---------- live replay feed ---------- */
+function buildFeed() {
+  S.feed = []; S.feedT = []; S.naive = []; S.incT = []; S.feedKey = '';
+  if (S.result && S.tracks) {
+    const fps = S.result.meta.src_fps, zone = S.zone && S.zone.length > 2 ? S.zone : null;
+    const seen = new Set(), zoned = new Set(), inside = {};
+    if (zone) {   // time each person really spent inside the zone (sampled frames)
+      const dt = S.result.meta.stride / fps;
+      for (const tr of S.tracks) { if (!isPerson(tr)) continue; const pid = tr.pid ?? tr.id;
+        tr.path.forEach((p, k) => { if (inPoly(p, zone)) { const v = inside[pid] = inside[pid] || { first: tr.frames[k] / fps, secs: 0 }; v.first = Math.min(v.first, tr.frames[k] / fps); v.secs += dt; } }); }
+    }
+    for (const tr of S.tracks.slice().sort((a, b) => a.first_frame - b.first_frame)) {
+      const pid = tr.pid ?? tr.id;
+      if (!seen.has(pid)) { seen.add(pid); S.feed.push({ t: tr.first_frame / fps, kind: 'scene', text: `${isPerson(tr) ? 'Person' : 'Object'} #${pid} detected` }); }
+      // only a real stay counts as "entered": brushing the zone edge for a moment is ignored
+      if (zone && isPerson(tr) && !zoned.has(pid) && inside[pid] && inside[pid].secs >= ENTRY_MIN_S) { zoned.add(pid); S.feed.push({ t: inside[pid].first, kind: 'zone', text: `#${pid} entered the restricted zone (${inside[pid].secs.toFixed(1)} s inside)` }); }
+    }
+    (S.result.incidents || []).forEach(i => S.feed.push({ t: i.alert_t ?? i.start_t, kind: 'inc', level: i.level, id: i.id, text: `${i.type} · severity ${Math.round(i.severity)}` }));
+    S.feed.sort((a, b) => a.t - b.t); S.feedT = S.feed.map(e => e.t);
+    S.naive = S.result.naive_times || []; S.incT = (S.result.incidents || []).map(i => i.alert_t ?? i.start_t).sort((a, b) => a - b);
+  }
+  updateFeed(vid.currentTime || 0, true);
+}
+function updateFeed(t, force) {
+  if (!S.feed) return;
+  const n = countLE(S.feedT, t), nn = countLE(S.naive, t), ni = countLE(S.incT, t), key = n + '|' + nn + '|' + ni;
+  if (key === S.feedKey && !force) return; S.feedKey = key;
+  $('#cNaive').textContent = S.result && S.result.kpis.naive_alerts !== null ? nn : '—'; $('#cInc').textContent = S.result ? ni : '—';
+  $('#bNaive').style.width = S.naive.length ? nn / S.naive.length * 100 + '%' : '0';
+  $('#bInc').style.width = S.incT.length ? Math.max(ni / S.incT.length * 100, ni ? 6 : 0) + '%' : '0';
+  const el = $('#feed');
+  if (!S.result) { el.innerHTML = '<div class="empty"><b>Nothing to replay yet</b>Analyze a video, then press Play.</div>'; return; }
+  const items = S.feed.slice(Math.max(0, n - 40), n).reverse();
+  el.innerHTML = items.length ? items.map(e => `<div class="fe ${e.kind} ${e.level || ''}" ${e.kind === 'inc' ? `data-id="${e.id}"` : ''}><time>${e.t.toFixed(1)}s</time><span>${esc(e.text)}</span></div>`).join('') : '<div class="empty">Press Play. Events appear here as they happen.</div>';
+  el.querySelectorAll('.fe.inc').forEach(x => x.onclick = () => selectIncident(+x.dataset.id));
+}
+
+/* ---------- heatmap (where people spent time) ---------- */
+$('#heatBtn').onclick = () => { S.showHeat = !S.showHeat; $('#heatBtn').setAttribute('aria-pressed', S.showHeat); if (S.showHeat && !S.tracks) toast('Analyze a video first.'); };
+function buildHeat() {
+  if (!S.tracks || !S.result) return null;
+  const [pw, ph] = S.v.proc_size, cs = 4, gw = Math.ceil(pw / cs), gh = Math.ceil(ph / cs), g = new Float32Array(gw * gh), R = 5;
+  const dt = S.result.meta.stride / S.result.meta.src_fps;
+  for (const tr of S.tracks) {
+    if (!isPerson(tr)) continue;
+    for (const p of tr.path) {
+      const cx = p[0] / cs, cy = (p[1] - 10) / cs;
+      for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+        const x = Math.round(cx) + dx, y = Math.round(cy) + dy; if (x < 0 || y < 0 || x >= gw || y >= gh) continue;
+        g[y * gw + x] += dt * Math.exp(-(dx * dx + dy * dy) / 7);
+      }
+    }
+  }
+  let mx = 0; for (const v of g) if (v > mx) mx = v; if (!mx) return null;
+  const cv = document.createElement('canvas'); cv.width = gw; cv.height = gh; const c = cv.getContext('2d'), im = c.createImageData(gw, gh);
+  const stops = [[0, [59, 130, 246]], [.35, [34, 211, 238]], [.6, [139, 92, 246]], [.8, [251, 124, 60]], [1, [240, 69, 90]]];
+  for (let i = 0; i < g.length; i++) {
+    const v = Math.pow(g[i] / mx, .6); let col = stops[0][1];
+    for (let s = 1; s < stops.length; s++) if (v <= stops[s][0]) { const a = (v - stops[s - 1][0]) / (stops[s][0] - stops[s - 1][0]), A = stops[s - 1][1], B = stops[s][1]; col = [0, 1, 2].map(k => A[k] + (B[k] - A[k]) * a); break; }
+    im.data[i * 4] = col[0]; im.data[i * 4 + 1] = col[1]; im.data[i * 4 + 2] = col[2]; im.data[i * 4 + 3] = v < .04 ? 0 : Math.min(235, v * 330);
+  }
+  c.putImageData(im, 0, 0); return { cv, max: mx };
+}
+
+/* ---------- report export ---------- */
+function blobToData(url) { return fetch(url).then(r => r.ok ? r.blob() : null).then(b => b ? new Promise(res => { const f = new FileReader(); f.onload = () => res(f.result); f.readAsDataURL(b); }) : null).catch(() => null); }
+function updateExport() { $('#expBtn').disabled = !(S.result && !S.busy); }
+$('#expBtn').onclick = async () => {
+  if (!S.result) return; const w = window.open('', '_blank'); if (!w) { toast('Please allow pop-ups for this page, then try again.'); return; }
+  w.document.write('<p style="font-family:sans-serif;padding:30px">Building report…</p>');
+  const r = S.result, k = r.kpis, name = encodeURIComponent(S.v.name);
+  const imgs = await Promise.all(r.incidents.map(i => i.evidence ? blobToData(`/api/evidence/${name}/inc${i.id}.jpg?raw=0`) : null));
+  const col = { low: '#b7791f', medium: '#c05621', high: '#c53030' };
+  const rows = r.incidents.map((i, n) => `<section class="inc"><div class="hd"><span class="sv" style="background:${col[i.level]}">${Math.round(i.severity)}</span><div><h3>Incident ${i.id}: ${esc(i.type)}</h3><p class="m">${esc(i.label)} #${i.track_id} · ${i.start_t.toFixed(1)}–${i.end_t.toFixed(1)} s · ${i.level} severity</p></div></div>
+    <div class="body">${imgs[n] ? `<img src="${imgs[n]}" alt="Evidence frame (people blurred)">` : ''}<div><p>${esc(i.summary)}</p><table>${i.factors.map(f => `<tr><td>${esc(f.label)}</td><td class="n">${f.points} / ${f.weight}</td><td class="d">${esc(f.detail)}</td></tr>`).join('')}<tr class="t"><td>Severity</td><td class="n">${Math.round(i.severity)} / 100</td><td></td></tr></table></div></div></section>`).join('');
+  const ev = r.evaluation;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>VisionGuard report - ${esc(S.v.name)}</title><style>
+  body{font:14px/1.5 "Segoe UI",system-ui,sans-serif;color:#1a2233;max-width:880px;margin:0 auto;padding:34px 28px}
+  h1{font-size:24px;margin:0}h2{font-size:15px;letter-spacing:.6px;text-transform:uppercase;color:#5a6785;margin:28px 0 10px;border-bottom:1px solid #d7dde9;padding-bottom:6px}
+  .sub{color:#5a6785;margin:4px 0 18px}.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kp div{border:1px solid #d7dde9;border-radius:10px;padding:10px 12px}.kp b{font-size:22px;display:block}.kp span{font-size:12px;color:#5a6785}
+  .inc{border:1px solid #d7dde9;border-radius:12px;padding:14px;margin:14px 0;break-inside:avoid}.hd{display:flex;gap:12px;align-items:center}.sv{color:#fff;font-weight:700;width:44px;height:44px;border-radius:10px;display:grid;place-items:center}
+  h3{margin:0;font-size:16px}.m{margin:0;color:#5a6785;font-size:12.5px}.body{display:grid;grid-template-columns:300px 1fr;gap:14px;margin-top:12px}.body img{width:100%;border-radius:8px;border:1px solid #d7dde9}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}td{padding:5px 6px;border-bottom:1px solid #e6eaf2;vertical-align:top}td.n{white-space:nowrap;text-align:right}td.d{color:#5a6785}tr.t td{font-weight:700;border-bottom:0}
+  .note{font-size:12px;color:#5a6785}.btn{position:fixed;right:18px;top:14px;padding:8px 14px;border:0;border-radius:8px;background:#2f6df0;color:#fff;font:inherit;cursor:pointer}
+  @media print{.btn{display:none}body{padding:0}}@media (max-width:700px){.body{grid-template-columns:1fr}.kp{grid-template-columns:1fr 1fr}}</style></head><body>
+  <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+  <h1>VisionGuard incident report</h1><p class="sub">Video: ${esc(S.v.name)} · Generated ${new Date().toLocaleString()} · Detector: ${esc(r.meta.detector)}</p>
+  <h2>Summary</h2><div class="kp"><div><b>${k.incidents}</b><span>Incidents raised</span></div><div><b>${k.naive_alerts === null ? '—' : k.naive_alerts}</b><span>Naive per-frame alerts</span></div><div><b>${k.reduction_pct === null ? '—' : k.reduction_pct + '%'}</b><span>Alerts reduced</span></div><div><b>${k.persons} / ${k.bags}</b><span>People / objects tracked</span></div></div>
+  ${ev ? `<h2>Evaluation against ground truth</h2><table><tr><td></td><td class="n"><b>Alerts</b></td><td class="n"><b>Precision</b></td><td class="n"><b>Recall</b></td></tr><tr><td>Naive per-frame rule</td><td class="n">${ev.baseline.alerts}</td><td class="n">${pct(ev.baseline.precision)}</td><td class="n">${pct(ev.baseline.recall)}</td></tr><tr><td><b>VisionGuard</b></td><td class="n">${ev.ours.alerts}</td><td class="n">${pct(ev.ours.precision)}</td><td class="n">${pct(ev.ours.recall)}</td></tr></table><p class="note">${ev.gt_events} ground-truth events from one recorded clip. This demonstrates the effect and is not a general accuracy claim.</p>` : ''}
+  <h2>Incidents</h2>${rows || '<p>No incidents were raised for this video.</p>'}
+  <h2>Method and limits</h2><p class="note">Detection: YOLOv8n (pretrained, CPU). Tracking and rules (zone, loitering, unattended object, rapid movement) are deterministic logic, not deep learning. Anomaly model: ${esc(r.anomaly_status)}. People are blurred in evidence frames. The system flags patterns and does not understand intent. Rule settings: loiter ${r.params.loiter_s}s, unattended ${r.params.abandon_s}s, rapid movement ${r.params.run_speed} body-heights/s.</p></body></html>`;
+  w.document.open(); w.document.write(html); w.document.close();
+};
+
+/* ---------- upload ---------- */
+$('#upBtn').onclick = () => { if (!S.busy) $('#upFile').click(); };
+$('#upFile').onchange = async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  S.busy = true; setStatus('busy', 'Uploading ' + file.name); $('#upBtn').disabled = $('#runBtn').disabled = $('#zoneBtn').disabled = true;
+  try {
+    const r = await fetch('/api/upload', { method: 'POST', headers: { 'X-Filename': encodeURIComponent(file.name) }, body: file });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.statusText);
+    S.busy = false; $('#upBtn').disabled = false;
+    S.v = { name: j.name }; await loadVideos(true); toast('Uploaded. Now draw the zone and press Analyze.', true);
+  } catch (err) { S.busy = false; $('#upBtn').disabled = $('#runBtn').disabled = $('#zoneBtn').disabled = false; setStatus('err', 'Upload failed'); toast('Upload failed: ' + err.message); }
+};
+
+
+/* ---------- dashboard / cameras / analytics / system usage ---------- */
+function renderDash() {
+  const k = S.result && S.result.kpis;
+  $('#dashKpis').innerHTML = !k ? ['People / objects', 'Incidents raised', 'Naive rule alerts', 'Alerts reduced'].map(l => `<div class="card kpi"><div class="skeleton" style="width:50%;height:26px"></div><div class="l" style="margin-top:8px">${l}</div><div class="s">analyze a video to fill this in</div></div>`).join('') :
+    kpi(k.persons + ' / ' + k.bags, 'People / objects tracked', S.v ? S.v.name : '') + kpi(k.incidents, 'Incidents raised', 'after triage', true) +
+    kpi(fmt(k.naive_alerts), 'Naive rule alerts', S.zone.length ? 'frame-by-frame zone rule' : 'draw a zone to compare') +
+    kpi(k.reduction_pct === null ? '—' : k.reduction_pct + '%', 'Alerts reduced', k.visitors_not_flagged !== null ? k.visitors_not_flagged + ' brief zone visit(s) not flagged' : 'needs a zone', true);
+  const f = $('#dashFat');
+  if (!k || k.naive_alerts === null) f.innerHTML = `<div class="empty"><b>${k ? 'Draw a restricted zone' : 'No analysis yet'}</b>The baseline rule needs a zone and an analysed video.</div>`;
+  else { const mx = Math.max(k.naive_alerts, k.incidents, 1);
+    f.innerHTML = `<div class="cmp"><div class="row"><span>Naive rule alerts</span><div class="bar"><i class="base" style="width:${k.naive_alerts / mx * 100}%"></i></div><b>${k.naive_alerts}</b></div>
+      <div class="row"><span>VisionGuard incidents</span><div class="bar"><i style="width:${Math.max(k.incidents / mx * 100, 1)}%"></i></div><b>${k.incidents}</b></div></div>
+      <div class="hint" style="margin-top:10px">${k.reduction_pct !== null ? `<b>${k.reduction_pct}% fewer alerts</b> for a person to review.` : ''}</div>`; }
+  const inc = (S.result && S.result.incidents || []).slice().sort((a, b) => b.severity - a.severity).slice(0, 5);
+  $('#dashIncTag').textContent = S.result ? (S.result.incidents.length + ' total') : '';
+  const el = $('#dashInc');
+  el.innerHTML = inc.length ? inc.map(i => `<button class="inc" data-id="${i.id}"><div class="sev ${i.level}">${Math.round(i.severity)}</div><div><b>${esc(i.type)}</b><div class="m">${esc(i.label)} #${i.track_id} · ${i.start_t.toFixed(1)}–${i.end_t.toFixed(1)} s · ${i.level}</div></div></button>`).join('') : `<div class="empty"><b>${S.result ? 'No incidents' : 'No analysis yet'}</b>${S.result ? 'Nothing crossed the rules in this clip.' : 'Open Cameras or press Analyze.'}</div>`;
+  el.querySelectorAll('.inc').forEach(b => b.onclick = () => { goView('inc'); selectIncident(+b.dataset.id); });
+  $('#dashCams').innerHTML = camTable(true);
+  bindCamButtons($('#dashCams'));
+}
+function camTable(compact) {
+  if (!S.videos.length) return `<div class="empty"><b>No videos found</b>Copy videos into data/videos, or use Upload video.</div>`;
+  return `<table><thead><tr><th>Source</th>${compact ? '' : '<th>Length</th><th>FPS</th>'}<th>Status</th><th></th></tr></thead><tbody>` + S.videos.map(v => {
+    const st = v.analyzed ? '<span class="badge real">analyzed</span>' : v.detected ? '<span class="badge rule">detected</span>' : '<span class="badge">new</span>';
+    return `<tr><td><b>${esc(v.name)}</b>${S.v && S.v.name === v.name ? ' <span class="badge ui">selected</span>' : ''}</td>${compact ? '' : `<td class="n">${v.duration} s</td><td class="n">${v.fps}</td>`}<td>${st}${v.has_gt ? '<span class="badge ml">ground truth</span>' : ''}${v.web_ready ? '' : '<span class="badge ui">needs preview copy</span>'}</td>
+      <td style="text-align:right"><button class="btn small" data-open="${esc(v.name)}">Open</button> <button class="btn small primary" data-an="${esc(v.name)}">Analyze</button></td></tr>`;
+  }).join('') + '</tbody></table>';
+}
+function bindCamButtons(root) {
+  root.querySelectorAll('[data-open]').forEach(b => b.onclick = async () => { $('#videoSel').value = b.dataset.open; await selectVideo(b.dataset.open); goView('center'); });
+  root.querySelectorAll('[data-an]').forEach(b => b.onclick = async () => { if (S.busy) { toast('An analysis is already running.'); return; } $('#videoSel').value = b.dataset.an; await selectVideo(b.dataset.an); runAnalyze(false); });
+}
+function renderCams() {
+  $('#camTag').textContent = S.videos.length + ' source' + (S.videos.length === 1 ? '' : 's');
+  $('#camBody').innerHTML = camTable(false); bindCamButtons($('#camBody'));
+}
+function renderAnalytics() {
+  const t = $('#anaTypes'), h = $('#anaHeat'); if (!t) return;
+  if (!S.result) { t.innerHTML = h.innerHTML = `<div class="empty"><b>No analysis yet</b>Analyze a video to see this.</div>`; return; }
+  const inc = S.result.incidents, byT = {}, byL = { high: 0, medium: 0, low: 0 };
+  inc.forEach(i => { byT[i.type] = (byT[i.type] || 0) + 1; byL[i.level]++; });
+  const mx = Math.max(1, ...Object.values(byT), ...Object.values(byL));
+  const row = (n, v, col) => `<div class="row"><span>${esc(n)}</span><div class="bar"><i style="width:${v / mx * 100}%;${col ? 'background:' + col : ''}"></i></div><b>${v}</b></div>`;
+  t.innerHTML = inc.length ? `<div class="cmp">${Object.entries(byT).map(([n, v]) => row(n, v)).join('')}</div><div class="hint" style="margin:14px 0 8px">By severity level</div><div class="cmp">${['high', 'medium', 'low'].map(l => row(l, byL[l], LEVEL_COL[l])).join('')}</div>` : `<div class="empty"><b>No incidents</b>Nothing crossed the rules in this clip.</div>`;
+  const heat = S.tracks ? buildHeat() : null;
+  if (!heat) { h.innerHTML = `<div class="empty"><b>No people tracked</b>The heatmap needs person tracks.</div>`; return; }
+  h.innerHTML = `<div class="heatbox"><img alt="First frame" src="/api/frame/${encodeURIComponent(S.v.name)}"><canvas id="anaCv"></canvas></div><div class="hint" style="margin-top:8px">Brighter = people stayed longer. Built from the tracked paths of ${S.tracks.filter(isPerson).length} person track(s).</div>`;
+  const cv = $('#anaCv'); cv.width = heat.cv.width * 4; cv.height = heat.cv.height * 4; const c = cv.getContext('2d'); c.imageSmoothingEnabled = true; c.globalAlpha = .8; c.drawImage(heat.cv, 0, 0, cv.width, cv.height);
+}
+async function loadNotify() {
+  try { S.notify = await api('/api/notify'); } catch (e) { return; }
+  const n = S.notify, e = n.email, w = n.whatsapp;
+  if (['nUser', 'nPass', 'nTo', 'nPhone', 'nKey'].includes(document.activeElement && document.activeElement.id)) return;
+  $('#nEmailOn').checked = e.enabled; $('#nUser').value = e.user; $('#nTo').value = e.to; $('#nPass').value = ''; $('#nPassNote').textContent = e.has_password ? '(saved, leave empty to keep)' : '';
+  $('#nWaOn').checked = w.enabled; $('#nPhone').value = w.phone; $('#nKey').value = ''; $('#nKeyNote').textContent = w.has_key ? '(saved, leave empty to keep)' : '';
+  $('#nLevel').value = n.min_level; $('#nAuto').checked = n.auto; $('#nEntries').checked = n.entries;
+  if (n.last && n.last.time) $('#nMsg').textContent = 'Last send: ' + sendSummary(n.last);
+}
+function sendSummary(r) {
+  return `${r.sent} incident alert(s), ${r.entries} entry notice(s) sent. ${r.already} already sent in this analysis, ${r.below} below the chosen level.` + (r.errors.length ? ' PROBLEM: ' + r.errors.join(' | ') : '');
+}
+function notifyBody() {
+  return { min_level: $('#nLevel').value, auto: $('#nAuto').checked, entries: $('#nEntries').checked,
+    email: { enabled: $('#nEmailOn').checked, user: $('#nUser').value, password: $('#nPass').value, to: $('#nTo').value },
+    whatsapp: { enabled: $('#nWaOn').checked, phone: $('#nPhone').value, apikey: $('#nKey').value } };
+}
+async function saveNotify(quiet) {
+  try { S.notify = await api('/api/notify', { method: 'POST', body: JSON.stringify(notifyBody()) }); if (!quiet) $('#nMsg').textContent = 'Saved.'; document.activeElement.blur(); await loadNotify(); return true; }
+  catch (e) { $('#nMsg').textContent = 'Could not save: ' + e.message; return false; }
+}
+$('#nSave').onclick = () => saveNotify();
+async function testChannel(ch, btn) {
+  btn.disabled = true; $('#nMsg').textContent = 'Sending test…';
+  try { if (!await saveNotify(true)) return; await api('/api/notify/test', { method: 'POST', body: JSON.stringify({ channel: ch }) }); $('#nMsg').textContent = ch === 'email' ? 'Test email sent. Check your inbox (and spam).' : 'Test WhatsApp sent. It can take up to a minute to arrive.'; }
+  catch (e) { $('#nMsg').textContent = 'Failed: ' + e.message; }
+  finally { btn.disabled = false; }
+}
+$('#nTestE').onclick = e => testChannel('email', e.target);
+$('#nTestW').onclick = e => testChannel('whatsapp', e.target);
+$('#nSend').onclick = async e => {
+  if (!S.v || !S.result) { toast('Analyze a video first.'); return; }
+  e.target.disabled = true; $('#nMsg').textContent = 'Sending…';
+  try { if (!await saveNotify(true)) return; const r = await api('/api/notify/send', { method: 'POST', body: JSON.stringify({ video: S.v.name }) });
+    $('#nMsg').textContent = sendSummary(r) + (r.already && !r.sent ? ' Press Analyze again to send them again.' : ''); }
+  catch (er) { $('#nMsg').textContent = 'Failed: ' + er.message; } finally { e.target.disabled = false; }
+};
+const ackKey = i => `${i.type}|${i.track_id}|${Math.round(i.start_t)}`;
+function chips(el, opts, cur, on) {
+  el.innerHTML = opts.map(([k, l]) => `<button class="chip ${cur === k ? 'on' : ''}" data-k="${k}">${l}</button>`).join('');
+  el.querySelectorAll('.chip').forEach(b => b.onclick = () => on(b.dataset.k));
+}
+function renderAlerts() {
+  const list = $('#alList'); if (!list) return;
+  chips($('#alSev'), [['all', 'All levels'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']], S.alSev, k => { S.alSev = k; renderAlerts(); });
+  chips($('#alSt'), [['open', 'Open'], ['ack', 'Acknowledged'], ['dismissed', 'Dismissed'], ['all', 'All']], S.alSt, k => { S.alSt = k; renderAlerts(); });
+  if (!S.result) { $('#alTag').textContent = ''; list.innerHTML = `<div class="empty"><b>No analysis yet</b>Analyze a video to get an alert log.</div>`; return; }
+  const st = i => S.ack[ackKey(i)] || 'open';
+  const all = S.result.incidents, rows = all.filter(i => (S.alSev === 'all' || i.level === S.alSev) && (S.alSt === 'all' || st(i) === S.alSt));
+  $('#alTag').textContent = `${rows.length} shown · ${all.filter(i => st(i) === 'open').length} open`;
+  list.innerHTML = rows.length ? `<table><thead><tr><th>Sev</th><th>Alert</th><th>Time</th><th></th></tr></thead><tbody>` + rows.map(i => {
+    const s = st(i);
+    return `<tr><td><div class="sev ${i.level}" style="width:38px;height:38px;font-size:14px">${Math.round(i.severity)}</div></td>
+      <td><b class="${s === 'dismissed' ? 'st-dis' : s === 'ack' ? 'st-ack' : ''}">${esc(i.type)}</b><div class="hint">${esc(i.label)} #${i.track_id}${s === 'ack' ? ' · acknowledged' : s === 'dismissed' ? ' · dismissed' : ''}</div></td>
+      <td class="n">${i.start_t.toFixed(1)}s</td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn small" data-v="${i.id}">View</button>${s === 'open' ? `<button class="btn small" data-a="ack" data-k="${esc(ackKey(i))}">Acknowledge</button><button class="btn small" data-a="dismissed" data-k="${esc(ackKey(i))}">Dismiss</button>` : `<button class="btn small" data-a="open" data-k="${esc(ackKey(i))}">Reopen</button>`}</td></tr>`;
+  }).join('') + '</tbody></table>' : `<div class="empty"><b>Nothing here</b>No alerts match these filters.</div>`;
+  list.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { goView('inc'); selectIncident(+b.dataset.v); });
+  list.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
+    try { S.ack = await api('/api/ack', { method: 'POST', body: JSON.stringify({ video: S.v.name, key: b.dataset.k, state: b.dataset.a }) }); renderAlerts(); }
+    catch (e) { toast('Could not save: ' + e.message); }
+  });
+}
+$('#wApply').onclick = () => runAnalyze(false);
+$('#wReset').onclick = () => { [['#wZone', 20], ['#wDwell', 40], ['#wAband', 60], ['#wRun', 30], ['#wAnom', 20]].forEach(([id, v]) => $(id).value = v); runAnalyze(false); };
+
+function polyArea(p) { let a = 0; for (let i = 0, j = p.length - 1; i < p.length; j = i++) a += (p[j][0] + p[i][0]) * (p[j][1] - p[i][1]); return Math.abs(a / 2); }
+function renderZones() {
+  const zb = $('#zoneBody'), zv = $('#zoneVisits'); if (!zb || !S.v) return;
+  const z = S.zone && S.zone.length > 2 ? S.zone : null;
+  if (!z) {
+    zb.innerHTML = `<div class="empty"><b>No zone drawn for ${esc(S.v.name)}</b>Without a zone, only bag and rapid-movement rules can fire.</div><div style="margin-top:12px"><button class="btn primary" id="zDraw">Draw zone</button></div>`;
+    zv.innerHTML = `<div class="empty"><b>No zone</b>Draw a zone to see who entered it.</div>`;
+    $('#zDraw').onclick = () => $('#zoneBtn').click(); return;
+  }
+  const [pw, ph] = S.v.proc_size, area = polyArea(z) / (pw * ph) * 100;
+  const vis = {};
+  if (S.tracks && S.result) {
+    const fps = S.result.meta.src_fps, dt = S.result.meta.stride / fps;
+    for (const tr of S.tracks) { if (!isPerson(tr)) continue; const pid = tr.pid ?? tr.id;
+      tr.path.forEach((p, k) => { if (inPoly(p, z)) { const v = vis[pid] = vis[pid] || { first: tr.frames[k] / fps, secs: 0 }; v.first = Math.min(v.first, tr.frames[k] / fps); v.secs += dt; } }); }
+  }
+  const ids = Object.keys(vis), flagged = new Set(); const idm = (S.result && S.result.identity) || {};
+  ((S.result && S.result.incidents) || []).forEach(i => (i.track_ids || [i.track_id]).forEach(t => flagged.add(String(idm[t] ?? t))));
+  zb.innerHTML = `<div class="zprev"><img alt="First frame" src="/api/frame/${encodeURIComponent(S.v.name)}"><svg viewBox="0 0 ${pw} ${ph}" preserveAspectRatio="none"><polygon points="${z.map(p => p.join(',')).join(' ')}" fill="rgba(139,92,246,.22)" stroke="#a78bfa" stroke-width="3" stroke-dasharray="10 7"/></svg></div>
+    <div class="mini"><div><b>${z.length}</b><span>corners</span></div><div><b>${area.toFixed(1)}%</b><span>of the frame</span></div><div><b>${S.result ? ids.length : '—'}</b><span>people entered</span></div><div><b>${S.result ? Object.values(vis).reduce((a, v) => a + v.secs, 0).toFixed(1) + ' s' : '—'}</b><span>total time inside</span></div></div>
+    <div class="fld" style="margin-top:14px"><label for="zName">Zone name</label><input id="zName" maxlength="40" value="${esc(S.zoneName || 'Restricted zone')}"></div>
+    <button class="btn" id="zSaveName">Save name</button> <button class="btn" id="zDraw">Redraw zone</button> <button class="btn" id="zClear">Clear zone</button>`;
+  $('#zDraw').onclick = () => $('#zoneBtn').click();
+  $('#zClear').onclick = () => $('#drawClear').click();
+  $('#zSaveName').onclick = async () => { S.zoneName = $('#zName').value.trim() || 'Restricted zone'; try { await api('/api/zone/' + encodeURIComponent(S.v.name), { method: 'POST', body: JSON.stringify({ points: S.zone, name: S.zoneName }) }); toast('Zone name saved.', true); } catch (e) { toast(e.message); } };
+  if (!S.result) { zv.innerHTML = `<div class="empty"><b>Analyze first</b>Visits come from tracked people.</div>`; return; }
+  zv.innerHTML = ids.length ? `<table><thead><tr><th>Person</th><th>First entry</th><th>Time inside</th><th>Flagged</th></tr></thead><tbody>` + ids.sort((a, b) => vis[b].secs - vis[a].secs).map(id => `<tr><td><b>#${id}</b></td><td class="n">${vis[id].first.toFixed(1)} s</td><td class="n">${vis[id].secs.toFixed(1)} s</td><td>${flagged.has(id) ? '<span class="badge ui">incident</span>' : '<span class="badge">brief visit</span>'}</td></tr>`).join('') + '</tbody></table><div class="hint" style="margin-top:8px">Time inside is counted from sampled frames, so it is approximate.</div>' : `<div class="empty"><b>Nobody entered the zone</b>in this clip.</div>`;
+}
+
+async function loadSettings() {
+  try { const d = await api('/api/settings'); S.cfg = d.settings; S.cfgDefaults = d.defaults; S.model = d.model; S.modelReady = d.model_ready; } catch (e) {}
+  renderSettings();
+}
+function renderSettings() {
+  if (!$('#sConf') || !S.cfg.conf) return;
+  if (document.activeElement && ['sConf', 'sBag', 'sStride'].includes(document.activeElement.id)) return;
+  $('#sConf').value = S.cfg.conf; $('#sBag').value = S.cfg.bag_conf; $('#sStride').value = S.cfg.stride; $('#sRaw').checked = !!S.cfg.allow_raw;
+  $('#sConfV').textContent = S.cfg.conf; $('#sBagV').textContent = S.cfg.bag_conf;
+  $('#sInfo').textContent = 'Lower confidence finds more objects but adds false detections. After saving, press Analyze: detection re-runs automatically.';
+  const m = S.result && S.result.meta;
+  $('#sDet').innerHTML = `Model file: <b style="color:var(--text)">${esc(S.model || '—')}</b> ${S.modelReady ? '' : '(missing, motion fallback in use)'}<br>${m ? `Last run: ${esc(m.detector)}, ${m.avg_infer_ms} ms per frame, ${m.processing_fps} fps` : 'Run an analysis to see speed on this laptop.'}`;
+  $('#stoBody').innerHTML = S.videos.length ? `<table><thead><tr><th>Video</th><th>Cached results</th><th></th></tr></thead><tbody>` + S.videos.map(v => `<tr><td><b>${esc(v.name)}</b></td><td class="n">${v.cache_mb} MB</td><td style="text-align:right"><button class="btn small" data-clr="${esc(v.name)}" ${v.detected ? '' : 'disabled'}>Clear results</button></td></tr>`).join('') + `</tbody></table><div class="hint" style="margin-top:8px">Your videos and drawn zones are never deleted. Clearing results only removes detections, scores and evidence frames.</div>` : '<div class="empty">No videos.</div>';
+  $('#stoBody').querySelectorAll('[data-clr]').forEach(b => b.onclick = async () => {
+    if (S.busy) { toast('An analysis is running. Try again after it finishes.'); return; }
+    if (!confirm('Clear cached results for ' + b.dataset.clr + '? You will need to Analyze it again.')) return;
+    try { await api('/api/cache/clear', { method: 'POST', body: JSON.stringify({ video: b.dataset.clr }) }); toast('Cleared.', true); await loadVideos(true); } catch (e) { toast(e.message); }
+  });
+}
+$('#sConf').oninput = e => $('#sConfV').textContent = e.target.value;
+$('#sBag').oninput = e => $('#sBagV').textContent = e.target.value;
+async function saveSettings(body) {
+  try { const d = await api('/api/settings', { method: 'POST', body: JSON.stringify(body) }); S.cfg = d.settings; toast('Settings saved. Press Analyze to apply them.', true); document.activeElement.blur(); renderSettings(); renderEvidence(); }
+  catch (e) { toast('Could not save: ' + e.message); }
+}
+$('#sSave').onclick = () => saveSettings({ conf: +$('#sConf').value, bag_conf: +$('#sBag').value, stride: +$('#sStride').value, allow_raw: $('#sRaw').checked });
+$('#sRaw').onchange = () => saveSettings({ allow_raw: $('#sRaw').checked });
+$('#sReset').onclick = () => saveSettings({ ...S.cfgDefaults });
+/* real CPU/RAM of this laptop, polled only while the Dashboard is open */
+function spark(arr) {
+  if (arr.length < 2) return '';
+  const pts = arr.map((v, i) => `${(i / (arr.length - 1) * 300).toFixed(1)},${(44 - Math.min(100, v) / 100 * 40).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 300 46" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="#22d3ee" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+async function pollSystem(once) {
+  if (S.view !== 'dash' || document.hidden) return;
+  try {
+    const d = await api('/api/system');
+    if (d.cpu !== null) { S.sys.push(d.cpu); if (S.sys.length > 40) S.sys.shift(); }
+    const cls = v => v > 85 ? 'hot' : v > 60 ? 'warn' : '';
+    const m = S.result ? S.result.kpis : null;
+    $('#sysTag').textContent = d.source === 'psutil' ? 'this laptop, live' : 'partial (pip install psutil for CPU)';
+    $('#sysBody').innerHTML = `<div class="sysrow">
+      <div><div class="l"><span>CPU</span><b>${d.cpu === null ? '—' : d.cpu + '%'}</b></div><div class="meter"><i class="${d.cpu === null ? '' : cls(d.cpu)}" style="width:${d.cpu || 0}%"></i></div></div>
+      <div><div class="l"><span>RAM</span><b>${d.ram_pct === null ? '—' : d.ram_pct + '%'}</b></div><div class="meter"><i class="${d.ram_pct === null ? '' : cls(d.ram_pct)}" style="width:${d.ram_pct || 0}%"></i></div></div></div>${spark(S.sys)}
+      <div class="mini"><div><b>${d.ram_used_gb ?? '—'} / ${d.ram_total_gb ?? '—'} GB</b><span>RAM used / total</span></div><div><b>${d.proc_mb ?? '—'} MB</b><span>VisionGuard process</span></div>
+      <div><b>${m ? m.avg_infer_ms + ' ms' : '—'}</b><span>Detector / frame (last run)</span></div><div><b>${m ? m.processing_fps : '—'}</b><span>Processing fps (last run)</span></div></div>
+      <div class="hint" style="margin-top:8px">${d.jobs_running ? 'An analysis is running right now, so CPU is high.' : 'Idle: no analysis running.'} ${d.cores || '?'} logical cores.</div>`;
+  } catch (e) { $('#sysBody').innerHTML = `<div class="empty"><b>System info unavailable</b>${esc(e.message)}</div>`; }
+}
+setInterval(pollSystem, 2000);
+
+loadSettings();
+loadVideos(false);
+goView('dash');
+</script>
+</body>
+</html>

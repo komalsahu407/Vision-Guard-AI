@@ -1,0 +1,6 @@
+opencv-python
+numpy
+scikit-learn
+onnxruntime
+imageio-ffmpeg
+psutil

@@ -116,6 +116,9 @@ def list_videos() -> list[dict]:
     return out
 
 
+PUBLIC = os.environ.get("VG_PUBLIC") == "1"   # public demo: email alerts and their settings are switched off
+
+
 def video_path(name: str) -> Path | None:
     p = config.VIDEO_DIR / Path(name).name
     return p if p.exists() and p.suffix.lower() in VIDEO_EXT else None
@@ -149,7 +152,7 @@ def run_job(name: str, force: bool, params: dict):
         analysis.analyze(p.name, params)
         msg = "Done"
         try:
-            if notify.load()["auto"]:
+            if not PUBLIC and notify.load()["auto"]:
                 r = notify.send_for_video(p.name, cdir)
                 msg = f"Done. Alerts sent: {r['sent']}, entry notices: {r['entries']}" + (f" ({len(r['errors'])} problem(s))" if r["errors"] else "")
         except Exception as ex:
@@ -336,6 +339,8 @@ class Handler(BaseHTTPRequestHandler):
                 SETTINGS_FILE.write_text(json.dumps(s))
                 return self._json({"settings": s})
             if parts[:2] == ["api", "notify"]:
+                if PUBLIC:
+                    return self._err(403, "Email alerts are switched off on this public demo. Run VisionGuard on your own laptop to use them.")
                 cfg_ = notify.load()
                 if len(parts) > 2 and parts[2] == "test":
                     ch = body.get("channel")
@@ -418,10 +423,12 @@ def main(port: int = 8000):
         psutil.cpu_percent(interval=None)   # prime the counter
     except ImportError:
         pass
-    srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    host = os.environ.get("VG_HOST", "127.0.0.1")        # laptop: only this computer. Server: 0.0.0.0
+    port = int(os.environ.get("PORT", port))
+    srv = ThreadingHTTPServer((host, port), Handler)
     url = f"http://127.0.0.1:{port}"
-    print(f"VisionGuard running at {url}   (press Ctrl+C to stop)")
-    if "--no-browser" not in sys.argv:
+    print(f"VisionGuard running at {url}   (press Ctrl+C to stop)" + ("   [public demo mode]" if PUBLIC else ""))
+    if "--no-browser" not in sys.argv and host == "127.0.0.1":
         threading.Timer(0.8, lambda: webbrowser.open(url)).start()
     try:
         srv.serve_forever()
